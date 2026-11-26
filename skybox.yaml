@@ -1,0 +1,28 @@
+name: abap-cloud-xlsx
+
+source:
+  root: ./src
+  # The XCO adapter needs SAP's released XLSX classes which the local
+  # skybox runtime does not ship. CSV and all mapping logic stay testable.
+  exclude:
+    - zcl_excel_xlsx.clas.abap
+
+runtime:
+  mode: console
+  max_steps: 10000000
+  console:
+    class: zcl_skybox_console
+  http:
+    host: 127.0.0.1
+    port: 8080
+    routes:
+      - path: /hello
+        methods: [GET]
+        class: zcl_skybox_http
+  syst:
+    mandt: 000
+    uname: DEVELOPER
+    langu: E
+    sysid: SKY
+
+dependencies: []

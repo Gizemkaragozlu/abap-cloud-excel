@@ -1,0 +1,13 @@
+# Yerel skybox calisma zamanı (buyuk binary, repo'ya alinmaz)
+skybox.exe
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+.vscode/
+.idea/
+
+# Yerel gecici ciktilar
+.local/
