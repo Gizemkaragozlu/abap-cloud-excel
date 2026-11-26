@@ -168,25 +168,31 @@ kullanılır.
 - Dosya boyutu ve satır sayısı, RAP endpoint'inizin sınırlarına tabidir; çok büyük
   dosyalarda parça parça yükleme önerilir.
 
-## GitHub'a yayınlama
+## GitHub
 
-Repo: **`abap-cloud-excel`** (public). Bu makinede `git` ve `gh` kurulu değildi;
-kurulum ve giriş adımlarını kullanıcı yapar:
+Repo yayında: **https://github.com/Gizemkaragozlu/abap-cloud-excel** (public, `main`).
 
-```powershell
-winget install --id Git.Git -e
-winget install --id GitHub.cli -e
-
-# YENI PowerShell penceresi:
-gh auth login
-```
-
-Ardından tek komutla repo oluşturulur ve push edilir:
+Yeni bir makinede klonlama:
 
 ```powershell
-cd C:\Users\Teampro1\abap-cloud-xlsx
-.\publish.ps1
+git clone https://github.com/Gizemkaragozlu/abap-cloud-excel.git
+cd abap-cloud-excel
 ```
 
-Script mevcut repo'yu algılarsa `origin` URL'sini güncelleyip `main` dalına push eder;
-yoksa `gh repo create ... --public --source=. --push` ile yeni repo açar.
+Günlük akış — test et, commit'le, push et:
+
+```powershell
+git status
+git pull --ff-only
+
+.\skybox.exe test -dir .
+.\skybox.exe run  -dir .
+
+git add -A
+git commit -m "Açıklayıcı commit mesajı"
+git push
+```
+
+Bu klasör zaten GitHub repo'suna bağlı (`origin`). `skybox.exe` repoya dahil
+olmadığından, klonladıktan sonra yerel çalıştırma için binary'yi ayrıca temin etmek
+gerekir; ABAP kaynakları ve testler olduğu gibi çalışır.
