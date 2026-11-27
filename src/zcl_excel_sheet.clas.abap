@@ -428,9 +428,11 @@ CLASS zcl_excel_sheet IMPLEMENTATION.
 
       CASE component-type->type_kind.
         WHEN cl_abap_typedescr=>typekind_date.
-          INSERT |{ <value> DATE = ISO }| INTO TABLE result.
+          DATA(date_value) = CONV d( <value> ).
+          INSERT |{ date_value DATE = ISO }| INTO TABLE result.
         WHEN cl_abap_typedescr=>typekind_time.
-          INSERT |{ <value> TIME = ISO }| INTO TABLE result.
+          DATA(time_value) = CONV t( <value> ).
+          INSERT |{ time_value TIME = ISO }| INTO TABLE result.
         WHEN cl_abap_typedescr=>typekind_oref
             OR cl_abap_typedescr=>typekind_dref
             OR cl_abap_typedescr=>typekind_struct1

@@ -276,12 +276,17 @@ CLASS zcl_excel_import IMPLEMENTATION.
       headings = VALUE string_table( FOR cell IN source_rows[ 1 ]-cells ( cell ) ).
     ENDIF.
 
-    DATA(map) = build_map(
-      headings   = headings
-      components = components
-      aliases    = aliases
-      required   = required
-      messages   = report-messages ).
+    DATA map TYPE ty_maps.
+    CALL METHOD build_map
+      EXPORTING
+        headings   = headings
+        components = components
+        aliases    = aliases
+        required   = required
+      CHANGING
+        messages   = report-messages
+      RECEIVING
+        map        = map.
 
     LOOP AT report-messages INTO DATA(mapping_message).
       IF mapping_message-severity = severity_error.
@@ -316,14 +321,25 @@ CLASS zcl_excel_import IMPLEMENTATION.
         ENDIF.
 
         DATA(cell) = cell_at( cells = source_row-cells column = mapping-column ).
-        IF set_field( cell = cell component = mapping-component field = <field> ) = abap_false.
-          add_message(
-            row      = excel_row
-            column   = mapping-column
-            field    = mapping-expected
-            severity = severity_error
-            text     = |Value '{ cell }' cannot be converted to { mapping-expected }.|
-            messages = report-messages ).
+        DATA ok TYPE abap_bool.
+        CALL METHOD set_field
+          EXPORTING
+            cell      = cell
+            component = mapping-component
+          CHANGING
+            field     = <field>
+          RECEIVING
+            ok        = ok.
+        IF ok = abap_false.
+          CALL METHOD add_message
+            EXPORTING
+              row      = excel_row
+              column   = mapping-column
+              field    = mapping-expected
+              severity = severity_error
+              text     = |Value '{ cell }' cannot be converted to { mapping-expected }.|
+            CHANGING
+              messages = report-messages.
           valid = abap_false.
         ENDIF.
       ENDLOOP.
@@ -475,17 +491,21 @@ CLASS zcl_excel_import IMPLEMENTATION.
       ENDIF.
 
       IF found = 0.
-        add_message(
-          field    = component-name
-          severity = severity_warning
-          text     = `No matching Excel column; the field stays initial.`
-          messages = messages ).
+        CALL METHOD add_message
+          EXPORTING
+            field    = component-name
+            severity = severity_warning
+            text     = `No matching Excel column; the field stays initial.`
+          CHANGING
+            messages = messages.
       ELSEIF line_exists( taken[ table_line = found ] ).
-        add_message(
-          field    = component-name
-          severity = severity_error
-          text     = |Excel column { found } is already mapped to another field.|
-          messages = messages ).
+        CALL METHOD add_message
+          EXPORTING
+            field    = component-name
+            severity = severity_error
+            text     = |Excel column { found } is already mapped to another field.|
+          CHANGING
+            messages = messages.
       ELSE.
         INSERT VALUE ty_map(
           field     = normalized_field
@@ -499,21 +519,25 @@ CLASS zcl_excel_import IMPLEMENTATION.
     LOOP AT headings INTO heading.
       DATA(column) = sy-tabix.
       IF NOT line_exists( taken[ table_line = column ] ).
-        add_message(
-          column   = column
-          severity = severity_info
-          text     = |Column '{ heading }' is ignored.|
-          messages = messages ).
+        CALL METHOD add_message
+          EXPORTING
+            column   = column
+            severity = severity_info
+            text     = |Column '{ heading }' is ignored.|
+          CHANGING
+            messages = messages.
       ENDIF.
     ENDLOOP.
 
     LOOP AT required INTO DATA(required_field).
       IF NOT line_exists( map[ field = normalize( required_field ) ] ).
-        add_message(
-          field    = required_field
-          severity = severity_error
-          text     = `Required column is missing from the file.`
-          messages = messages ).
+        CALL METHOD add_message
+          EXPORTING
+            field    = required_field
+            severity = severity_error
+            text     = `Required column is missing from the file.`
+          CHANGING
+            messages = messages.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
