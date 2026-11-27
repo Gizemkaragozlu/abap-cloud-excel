@@ -25,13 +25,13 @@ INTERFACE zif_excel_xlsx PUBLIC.
       sheet_name  TYPE string
       skip_header TYPE abap_bool
     CHANGING
-      data        TYPE ANY TABLE
+      target      TYPE ANY TABLE
     RAISING
       zcx_excel_sheet.
 
   METHODS write
     IMPORTING
-      data       TYPE ANY TABLE
+      source     TYPE ANY TABLE
       sheet_name TYPE string
     RETURNING
       VALUE(content) TYPE xstring

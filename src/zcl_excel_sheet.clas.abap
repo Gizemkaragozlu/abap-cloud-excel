@@ -40,7 +40,7 @@ CLASS zcl_excel_sheet DEFINITION
         sheet_name  TYPE string OPTIONAL
         skip_header TYPE abap_bool DEFAULT abap_false
       CHANGING
-        data        TYPE ANY TABLE
+        target      TYPE ANY TABLE
       RAISING
         zcx_excel_sheet.
 
@@ -57,7 +57,7 @@ CLASS zcl_excel_sheet DEFINITION
 
     CLASS-METHODS write
       IMPORTING
-        data           TYPE ANY TABLE
+        source         TYPE ANY TABLE
         sheet_name     TYPE string DEFAULT `Sheet1`
         header         TYPE abap_bool DEFAULT abap_true
       RETURNING
@@ -77,7 +77,7 @@ CLASS zcl_excel_sheet DEFINITION
 
     CLASS-METHODS write_csv
       IMPORTING
-        data           TYPE ANY TABLE
+        source         TYPE ANY TABLE
         separator      TYPE string DEFAULT `,`
         header         TYPE abap_bool DEFAULT abap_true
       RETURNING
@@ -102,13 +102,13 @@ CLASS zcl_excel_sheet DEFINITION
 
     CLASS-METHODS assert_table
       IMPORTING
-        data TYPE ANY TABLE
+        source TYPE ANY TABLE
       RAISING
         zcx_excel_sheet.
 
     CLASS-METHODS line_components
       IMPORTING
-        data          TYPE ANY TABLE
+        source        TYPE ANY TABLE
       RETURNING
         VALUE(result) TYPE cl_abap_structdescr=>component_table.
 
@@ -204,8 +204,8 @@ CLASS zcl_excel_sheet IMPLEMENTATION.
 
 
   METHOD read_into.
-    assert_table( data ).
-    CLEAR data.
+    assert_table( target ).
+    CLEAR target.
 
     DATA(provider) = xlsx_provider( ).
     provider->read_into(
@@ -215,7 +215,7 @@ CLASS zcl_excel_sheet IMPLEMENTATION.
         sheet_name  = sheet_name
         skip_header = skip_header
       CHANGING
-        data        = data ).
+        target      = target ).
   ENDMETHOD.
 
 
@@ -287,10 +287,10 @@ CLASS zcl_excel_sheet IMPLEMENTATION.
 
 
   METHOD write.
-    assert_table( data ).
+    assert_table( source ).
     assert_sheet_name( sheet_name ).
 
-    DATA(components) = line_components( data ).
+    DATA(components) = line_components( source ).
     DATA(created) = string_rows( lines( components ) ).
     ASSIGN created->* TO FIELD-SYMBOL(<rows>).
 
@@ -302,7 +302,7 @@ CLASS zcl_excel_sheet IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    LOOP AT data ASSIGNING FIELD-SYMBOL(<line>).
+    LOOP AT source ASSIGNING FIELD-SYMBOL(<line>).
       DATA(cells) = cells_from_line( line = <line> components = components ).
       INSERT INITIAL LINE INTO TABLE <rows> ASSIGNING FIELD-SYMBOL(<out>).
       LOOP AT cells INTO DATA(cell).
@@ -312,7 +312,7 @@ CLASS zcl_excel_sheet IMPLEMENTATION.
     ENDLOOP.
 
     DATA(provider) = xlsx_provider( ).
-    content = provider->write( data = <rows> sheet_name = sheet_name ).
+    content = provider->write( source = <rows> sheet_name = sheet_name ).
   ENDMETHOD.
 
 
@@ -346,9 +346,9 @@ CLASS zcl_excel_sheet IMPLEMENTATION.
 
   METHOD write_csv.
     assert_separator( separator ).
-    assert_table( data ).
+    assert_table( source ).
 
-    DATA(components) = line_components( data ).
+    DATA(components) = line_components( source ).
     DATA(text) = ``.
     DATA(line_no) = 0.
 
@@ -360,7 +360,7 @@ CLASS zcl_excel_sheet IMPLEMENTATION.
       line_no = 1.
     ENDIF.
 
-    LOOP AT data ASSIGNING FIELD-SYMBOL(<line>).
+    LOOP AT source ASSIGNING FIELD-SYMBOL(<line>).
       DATA(cells) = cells_from_line( line = <line> components = components ).
       DATA(line) = concat_lines_of(
         table = VALUE string_table( FOR cell IN cells ( escape_csv( cell = cell separator = separator ) ) )
@@ -383,7 +383,7 @@ CLASS zcl_excel_sheet IMPLEMENTATION.
 
 
   METHOD assert_table.
-    DATA(table_descr) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( data ) ).
+    DATA(table_descr) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( source ) ).
     IF table_descr->table_kind <> cl_abap_tabledescr=>tablekind_std
         OR table_descr->get_table_line_type( )->kind <> cl_abap_typedescr=>kind_struct.
       RAISE EXCEPTION TYPE zcx_excel_sheet
@@ -394,7 +394,7 @@ CLASS zcl_excel_sheet IMPLEMENTATION.
 
 
   METHOD line_components.
-    DATA(table_descr) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( data ) ).
+    DATA(table_descr) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( source ) ).
     result = CAST cl_abap_structdescr( table_descr->get_table_line_type( ) )->get_components( ).
   ENDMETHOD.
 

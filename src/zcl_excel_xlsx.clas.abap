@@ -86,7 +86,7 @@ CLASS zcl_excel_xlsx DEFINITION
         skip_header TYPE abap_bool
         as_string   TYPE abap_bool
       CHANGING
-        data        TYPE ANY TABLE
+        target      TYPE ANY TABLE
       RAISING
         zcx_excel_sheet.
 
@@ -117,7 +117,7 @@ CLASS zcl_excel_xlsx IMPLEMENTATION.
         skip_header = skip_header
         as_string   = abap_true
       CHANGING
-        data        = wide ).
+        target      = wide ).
 
     DATA(width) = 0.
     LOOP AT wide INTO DATA(wide_row).
@@ -143,7 +143,7 @@ CLASS zcl_excel_xlsx IMPLEMENTATION.
         skip_header = skip_header
         as_string   = abap_false
       CHANGING
-        data        = data ).
+        target      = target ).
   ENDMETHOD.
 
 
@@ -156,7 +156,7 @@ CLASS zcl_excel_xlsx IMPLEMENTATION.
         DATA(pattern) = xco_cp_xlsx_selection=>pattern_builder->simple_from_to( )->get_pattern( ).
         DATA(result)  = grid->select( pattern
                         )->row_stream(
-                        )->operation->write_from( REF #( data )
+                        )->operation->write_from( REF #( source )
                         )->execute( ).
 
         IF result->succeeded = abap_false.
@@ -232,14 +232,12 @@ CLASS zcl_excel_xlsx IMPLEMENTATION.
           pattern = xco_cp_xlsx_selection=>pattern_builder->simple_from_to( )->get_pattern( ).
         ENDIF.
 
-        DATA(operation) = grid->select( pattern )->row_stream( )->operation->write_to( REF #( data ) ).
+        DATA(operation) = grid->select( pattern )->row_stream( )->operation->write_to( REF #( target ) ).
         IF as_string = abap_true.
-          DATA(result) = operation
-            ->set_value_transformation( xco_cp_xlsx_read_access=>value_transformation->string_value
+          DATA(result) = operation->set_value_transformation( xco_cp_xlsx_read_access=>value_transformation->string_value
             )->execute( ).
         ELSE.
-          result = operation
-            ->set_value_transformation( xco_cp_xlsx_read_access=>value_transformation->best_effort
+          result = operation->set_value_transformation( xco_cp_xlsx_read_access=>value_transformation->best_effort
             )->execute( ).
         ENDIF.
 

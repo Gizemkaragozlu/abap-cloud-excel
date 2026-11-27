@@ -83,7 +83,7 @@ CLASS zcl_excel_order_demo IMPLEMENTATION.
               ( `MATERIAL` ) ( `QUANTITY` ) ( `DELIVERY_DATE` ) )
             separator = `;`
           CHANGING
-            data      = orders
+            target    = orders
           RECEIVING
             report    = report.
 

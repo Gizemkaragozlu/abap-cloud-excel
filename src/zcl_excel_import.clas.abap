@@ -68,7 +68,7 @@ CLASS zcl_excel_import DEFINITION
         separator    TYPE string DEFAULT `,`
         keep_invalid TYPE abap_bool DEFAULT abap_false
       CHANGING
-        data         TYPE ANY TABLE
+        target       TYPE ANY TABLE
       RETURNING
         VALUE(report) TYPE ty_report
       RAISING
@@ -98,13 +98,13 @@ CLASS zcl_excel_import DEFINITION
 
     CLASS-METHODS assert_table
       IMPORTING
-        data TYPE ANY TABLE
+        source TYPE ANY TABLE
       RAISING
         zcx_excel_sheet.
 
     CLASS-METHODS line_components
       IMPORTING
-        data          TYPE ANY TABLE
+        source        TYPE ANY TABLE
       RETURNING
         VALUE(result) TYPE cl_abap_structdescr=>component_table.
 
@@ -244,8 +244,10 @@ CLASS zcl_excel_import IMPLEMENTATION.
 
 
   METHOD import.
-    assert_table( data ).
-    CLEAR data.
+    FIELD-SYMBOLS <table> TYPE STANDARD TABLE.
+    assert_table( target ).
+    CLEAR target.
+    ASSIGN target TO <table>.
 
     DATA(file_format) = format.
     IF file_format IS INITIAL.
@@ -270,7 +272,7 @@ CLASS zcl_excel_import IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    DATA(components) = line_components( data ).
+    DATA(components) = line_components( target ).
     DATA(headings) = VALUE string_table( ).
     IF header = abap_true.
       headings = VALUE string_table( FOR cell IN source_rows[ 1 ]-cells ( cell ) ).
@@ -310,8 +312,8 @@ CLASS zcl_excel_import IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      INSERT INITIAL LINE INTO TABLE data ASSIGNING FIELD-SYMBOL(<line>).
-      DATA(inserted_at) = lines( data ).
+      INSERT INITIAL LINE INTO TABLE <table> ASSIGNING FIELD-SYMBOL(<line>).
+      DATA(inserted_at) = lines( <table> ).
       DATA(valid) = abap_true.
 
       LOOP AT map INTO DATA(mapping).
@@ -349,7 +351,7 @@ CLASS zcl_excel_import IMPLEMENTATION.
       ELSE.
         report-rows_rejected += 1.
         IF keep_invalid = abap_false.
-          DELETE data INDEX inserted_at.
+          DELETE <table> INDEX inserted_at.
         ENDIF.
       ENDIF.
     ENDLOOP.
@@ -391,9 +393,9 @@ CLASS zcl_excel_import IMPLEMENTATION.
 
     CASE format.
       WHEN format_xlsx.
-        content = zcl_excel_sheet=>write( data = <rows> sheet_name = sheet_name header = abap_false ).
+        content = zcl_excel_sheet=>write( source = <rows> sheet_name = sheet_name header = abap_false ).
       WHEN format_csv.
-        content = zcl_excel_sheet=>write_csv( data = <rows> separator = separator header = abap_false ).
+        content = zcl_excel_sheet=>write_csv( source = <rows> separator = separator header = abap_false ).
       WHEN OTHERS.
         RAISE EXCEPTION TYPE zcx_excel_sheet
           EXPORTING
@@ -403,7 +405,7 @@ CLASS zcl_excel_import IMPLEMENTATION.
 
 
   METHOD assert_table.
-    DATA(table_descr) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( data ) ).
+    DATA(table_descr) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( source ) ).
     IF table_descr->table_kind <> cl_abap_tabledescr=>tablekind_std
         OR table_descr->get_table_line_type( )->kind <> cl_abap_typedescr=>kind_struct.
       RAISE EXCEPTION TYPE zcx_excel_sheet
@@ -424,7 +426,7 @@ CLASS zcl_excel_import IMPLEMENTATION.
 
 
   METHOD line_components.
-    DATA(table_descr) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( data ) ).
+    DATA(table_descr) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( source ) ).
     result = CAST cl_abap_structdescr( table_descr->get_table_line_type( ) )->get_components( ).
   ENDMETHOD.
 

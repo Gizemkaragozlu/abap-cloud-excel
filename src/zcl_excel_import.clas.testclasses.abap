@@ -40,7 +40,7 @@ CLASS ltcl_import IMPLEMENTATION.
         required  = VALUE string_table( ( `MATERIAL` ) ( `QUANTITY` ) )
         separator = `;`
       CHANGING
-        data      = orders
+        target    = orders
       RECEIVING
         report    = report.
 
@@ -64,7 +64,7 @@ CLASS ltcl_import IMPLEMENTATION.
         header    = abap_false
         separator = `;`
       CHANGING
-        data      = orders
+        target    = orders
       RECEIVING
         report    = report.
 
@@ -84,7 +84,7 @@ CLASS ltcl_import IMPLEMENTATION.
         header    = abap_false
         separator = `;`
       CHANGING
-        data      = orders
+        target    = orders
       RECEIVING
         report    = report.
 
@@ -111,7 +111,7 @@ CLASS ltcl_import IMPLEMENTATION.
         required  = VALUE string_table( ( `QUANTITY` ) )
         separator = `;`
       CHANGING
-        data      = orders
+        target    = orders
       RECEIVING
         report    = report.
 
@@ -149,7 +149,7 @@ CLASS ltcl_import IMPLEMENTATION.
         aliases   = aliases( )
         separator = `;`
       CHANGING
-        data      = orders
+        target    = orders
       RECEIVING
         report    = report.
 
